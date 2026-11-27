@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  # Daily against the latest Claude Code: the mods API is early access and can change between releases.
+  schedule:
+    - cron: "17 18 * * *" # 03:17 KST
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # hooks/sprite.py runs on the system /usr/bin/python3, so every Python from 3.9 on. The tests decode
+  # GIFs and PNGs built in the test itself: nothing is downloaded from PokéAPI.
+  python:
+    name: Python ${{ matrix.python }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v7
+
+      - name: Unit tests
+        run: uv run --locked --python ${{ matrix.python }} --only-group test pytest
+
+  mod:
+    name: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Record the Claude Code version
+        shell: bash
+        run: echo "::notice title=Claude Code (${{ runner.os }})::$(claude --version)"
+
+      - name: Validate the plugin
+        run: claude plugin validate .
+
+      - name: Unit tests
+        run: claude plugin test .
+
+      # tsc is skipped: it reads .claude-plugin/types, which the engine writes only where it loads the mod,
+      # and a session without login does not load it. It runs in the pre-commit hook on your machine.
+      - uses: astral-sh/setup-uv@v7
+        if: runner.os == 'Linux'
+
+      - name: Lint (pre-commit without tsc)
+        if: runner.os == 'Linux'
+        env:
+          SKIP: tsc
+        run: uv run --locked pre-commit run --all-files --show-diff-on-failure

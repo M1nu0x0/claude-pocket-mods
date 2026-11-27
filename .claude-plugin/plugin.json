@@ -1,0 +1,12 @@
+{
+  "name": "pocketmods",
+  "version": "0.1.0",
+  "description": "A pixel Pokémon that walks, jumps and falls over the chat in Claude Desktop's Code tab",
+  "author": {
+    "name": "M1nu0x0",
+    "url": "https://github.com/M1nu0x0"
+  },
+  "repository": "https://github.com/M1nu0x0/claude-pocket-mods",
+  "license": "MIT",
+  "keywords": ["claude-code", "claude-desktop", "plugin", "mod", "pet", "pixel-art"]
+}
