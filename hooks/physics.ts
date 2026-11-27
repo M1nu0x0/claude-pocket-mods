@@ -24,6 +24,8 @@ export type Pet = {
   grip?: { dx: number; dy: number; trail: { t: number; x: number; y: number }[] }
   // By left edge and width: the surface is found again however far it scrolls.
   on?: { x0: number; x1: number }
+  // Seconds on the ground with something over the body.
+  stuck?: number
 }
 
 export const TICK_MS = 66
@@ -57,6 +59,8 @@ const GRIP = 0.6
 // A thrown pet moves at most this many cells a substep, so a fast throw cannot pass through a wall.
 const SUBSTEP = 0.25
 const EPS = 1e-6
+// A pet covered this many seconds moves out; a resize that only brushes it does not move it.
+const STUCK = 0.3
 
 // Solid: what a float may not paint over, and conversation boxes two rows tall or more (text lines are air).
 // A wide interface shape (the band, the prompt box) is solid all the way down so nothing slips between them.
@@ -116,6 +120,28 @@ function room(x: number, y: number, world: World, size: Size): { lo: number; hi:
 
 const toward = (from: number, to: number, most: number) => from + Math.sign(to - from) * Math.min(most, Math.abs(to - from))
 const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi)
+
+// Whether something cuts the drawing of a pet standing at x, feet at y. A top within STEP of the feet is stepped onto instead.
+const covered = (x: number, y: number, world: World, size: Size) =>
+  world.solids.some(s => !s.oneWay && s.y0 < y - STEP && s.y1 > y - size.h + EPS && s.x0 < x + size.w / 2 - EPS && s.x1 > x - size.w / 2 + EPS)
+
+// The nearest place to stand with the whole body clear, a column counting half a row.
+function clearSpot(pet: Pet, world: World, size: Size): { x: number; y: number } | undefined {
+  const half = size.w / 2
+  const edges = world.solids.flatMap(s => [s.x0 - half, s.x1 + half])
+  const spots = world.solids
+    .filter(s => standable(s, world, size))
+    .flatMap(s => {
+      const lo = Math.max(s.x0 + half, half)
+      const hi = Math.min(s.x1 - half, world.columns - half)
+      return [clamp(pet.x, lo, hi), ...edges]
+        .filter(x => x >= lo && x <= hi && !covered(x, s.y0, world, size))
+        .map(x => ({ x, y: s.y0 }))
+    })
+  const far = (p: { x: number; y: number }) => Math.hypot((p.x - pet.x) / 2, p.y - pet.y)
+
+  return spots.sort((a, b) => far(a) - far(b))[0]
+}
 
 export const start = (world: World, size: Size): Pet => ({
   x: world.columns / 2,
@@ -368,19 +394,22 @@ export function step(pet: Pet, world: World, size: Size, dt: number, rand: () =>
     return { ...now, x: inside, y: now.y > world.rows ? size.h : now.y, vx: 0, vy: 0, mode: 'air', on: undefined, goal: { x: inside, top: floorAt(world, inside) } }
   }
 
-  // The edge of the reach closed over the pet: move it sideways to the nearest free spot and let it fall.
-  const buried = (x: number, y: number) => world.solids.some(s => s.x0 < x && x < s.x1 && s.y0 < y - STEP && s.y1 > y - size.h && s.y1 !== Infinity && s.y0 <= 0)
-  if (buried(now.x, now.y)) {
-    const free = Array.from({ length: Math.ceil(world.columns) }, (_, d) => [now.x - d, now.x + d])
-      .flat()
-      .find(at => at >= size.w / 2 && at <= world.columns - size.w / 2 && !buried(at, now.y))
-    const x = free ?? world.columns / 2
-    return { ...now, x, vx: 0, vy: 0, mode: 'air', on: undefined, goal: { x, top: floorAt(world, x) } }
-  }
   // The floor rose over the feet (the band grew): stand on it.
   const floor = floorAt(world, now.x)
   if (now.y > floor + SNAP) {
     return { ...now, y: floor, vx: 0, vy: 0, mode: now.mode === 'air' || now.mode === 'thrown' ? 'walk' : now.mode }
+  }
+  // A resize can leave the pet where it does not fit: a gap narrower than itself, or under the edge of the reach.
+  // Counted only on the ground, so a jump or a throw that grazes an edge is left alone.
+  if (now.mode === 'idle' || now.mode === 'walk') {
+    now.stuck = covered(now.x, now.y, world, size) ? (now.stuck ?? 0) + dt : 0
+    if (now.stuck >= STUCK) {
+      now.stuck = 0
+      const spot = clearSpot(now, world, size)
+      if (spot !== undefined) {
+        return { ...now, ...spot, vx: 0, vy: 0, mode: 'air', on: undefined, goal: { x: spot.x, top: spot.y } }
+      }
+    }
   }
 
   const next = now.mode === 'thrown'
