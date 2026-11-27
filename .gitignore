@@ -1,0 +1,9 @@
+.DS_Store
+*.log
+__MACOSX/
+__pycache__/
+.pytest_cache/
+.venv/
+# Written by the engine where it loads the mod.
+**/.claude-plugin/types/
+.mcpb-cache/
