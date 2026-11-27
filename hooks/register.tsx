@@ -5,22 +5,24 @@ import { encodeSprite, parseArg } from './scene'
 import type { PetSprite } from './scene'
 
 const PLUGIN = 'pocketmods'
-const USAGE = 'Usage: /pocket <number>: a national dex number (1-1025), or a form from 10001 on'
+const USAGE = 'Usage: /pocket <number> [shiny]: a national dex number (1-1025), or a form from 10001 on'
 
 let pet: PetSprite | undefined
-// The last number /pocket asked for: a slower download of an earlier one does not replace it.
-let latest: number | undefined
+let petShiny = false
+// The last pet /pocket asked for: a slower download of an earlier one does not replace it.
+let latest: string | undefined
 // What the Client last reported: a new instance (a reload, a switch of session, a dialog that hid
 // the cell) picks up from here.
 let resume: unknown
 
-async function loadPet($: EngineInterface, id: number): Promise<PetSprite> {
-  const cached = (await $.store.get(`pet4:${id}`)) as PetSprite | undefined
+async function loadPet($: EngineInterface, id: number, shiny: boolean): Promise<PetSprite> {
+  const key = `pet4:${id}${shiny ? ':shiny' : ''}`
+  const cached = (await $.store.get(key)) as PetSprite | undefined
   if (cached !== undefined) {
     return cached
   }
   const { exitCode, stdout, stderr } = await $.process.run(
-    ['/usr/bin/python3', '-I', `${$.plugin.root}/hooks/sprite.py`, String(id)],
+    ['/usr/bin/python3', '-I', `${$.plugin.root}/hooks/sprite.py`, String(id), ...(shiny ? ['shiny'] : [])],
     { timeoutMs: 60_000 },
   )
   if (exitCode !== 0) {
@@ -30,7 +32,7 @@ async function loadPet($: EngineInterface, id: number): Promise<PetSprite> {
   if (loaded === undefined) {
     throw new Error(`#${id} is too large or detailed to draw`)
   }
-  await $.store.set(`pet4:${id}`, loaded)
+  await $.store.set(key, loaded)
 
   return loaded
 }
@@ -51,10 +53,12 @@ export const register: Register = on => {
     await $.command.register({ name: 'pocket', description: 'Pick the pet by national dex number, or a form from 10001 on', argumentHint: '<number>' })
     resume = await $.store.get('pet-state')
     const id = Number((await $.store.get('id')) ?? 25)
-    loadPet($, id)
+    const shiny = (await $.store.get('shiny')) === true
+    loadPet($, id, shiny)
       .then(loaded => {
         if (pet === undefined) {
           pet = loaded
+          petShiny = shiny
           $.ui.invalidate('ui.render')
         }
       })
@@ -79,25 +83,29 @@ export const register: Register = on => {
   })
 
   on('command.run', { command: 'pocket' }, async ($, e) => {
-    const id = parseArg(e.args)
-    if (id === undefined) {
+    const asked = parseArg(e.args)
+    if (asked === undefined) {
       return { text: USAGE }
     }
-    latest = id
+    const { id, shiny } = asked
+    const name = `#${id}${shiny ? ' shiny' : ''}`
+    latest = name
     let loaded: PetSprite
     try {
-      loaded = await loadPet($, id)
+      loaded = await loadPet($, id, shiny)
     } catch (err) {
       return { text: `pocket: ${String(err)}` }
     }
-    if (latest !== id) {
-      return { text: `pocket: #${id} skipped, #${latest} was asked for since` }
+    if (latest !== name) {
+      return { text: `pocket: ${name} skipped, ${latest} was asked for since` }
     }
     pet = loaded
+    petShiny = shiny
     await $.store.set('id', id)
+    await $.store.set('shiny', shiny)
     $.ui.invalidate('ui.render')
 
-    return { text: `pocket: #${id}` }
+    return { text: `pocket: ${name}` }
   })
 
   // Past the reach and under what a float may not paint over, the Client hears interface shapes as walls and floors.
@@ -118,8 +126,8 @@ export const register: Register = on => {
           width={e.props.floatColumns * 2}
           height={e.props.floatRows + BELOW}
         >
-          {/* Keyed by number: a Client that failed is given up on, and a new pet must not inherit that. */}
-          <Client key={`pet-${pet.id}`} module="./pet-client.tsx" props={props} width="100%" height="100%" />
+          {/* Keyed by pet: a Client that failed is given up on, and a new pet must not inherit that. */}
+          <Client key={`pet-${pet.id}${petShiny ? '-shiny' : ''}`} module="./pet-client.tsx" props={props} width="100%" height="100%" />
         </Box>
       </Box>
     )

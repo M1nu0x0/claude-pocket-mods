@@ -151,9 +151,11 @@ export function rectsOf(sprite: PetSprite): Fill[][] {
   return frames
 }
 
-export function parseArg(text: string): number | undefined {
-  const id = Number(text.trim())
+export function parseArg(text: string): { id: number; shiny: boolean } | undefined {
+  const [number, variant, ...rest] = text.trim().split(/\s+/)
+  const id = Number(number)
+  const known = (variant === undefined || variant === 'shiny') && rest.length === 0
 
   // No upper bound: forms run past the dex (10001 on), and sprite.py says which numbers have no sprite.
-  return Number.isSafeInteger(id) && id >= 1 ? id : undefined
+  return known && Number.isSafeInteger(id) && id >= 1 ? { id, shiny: variant === 'shiny' } : undefined
 }

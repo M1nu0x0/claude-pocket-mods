@@ -30,6 +30,7 @@ In Claude Desktop, open `+` beside the prompt → Plugins → Add marketplace, e
 ## Use
 
 - `/pocket 25` picks a Pokémon by national dex number (1–1025), or one of PokéAPI's form numbers from 10001 on (megas, regional forms and the like). A number with no sprite says so.
+- `/pocket 25 shiny` picks its shiny colors. A number with no shiny sprite says so, and the pet stays as it was.
 
 The pet floats from a zero-width cell beside the prompt, so it draws over the conversation within the room the app gives floats above the prompt. A press on the pet picks it up; drag it and let go to drop it onto whatever is below.
 
@@ -37,7 +38,7 @@ Only the Claude Code desktop app is supported. The terminal, mobile and VS Code 
 
 ## How sprites arrive
 
-Nothing Pokémon is bundled. On first use of a number, `hooks/sprite.py` (Python standard library only, `/usr/bin/python3`) downloads the Black/White animated sprite from the [PokéAPI sprites repository](https://github.com/PokeAPI/sprites) (falling back to the still sprite), decodes the GIF frames, keeps as many evenly spaced frames as fit the drawing's size limit (up to 12), and caches the pixels in the mod's store on your machine.
+Nothing Pokémon is bundled. On first use of a number (and again for its shiny colors), `hooks/sprite.py` (Python standard library only, `/usr/bin/python3`) downloads the Black/White animated sprite from the [PokéAPI sprites repository](https://github.com/PokeAPI/sprites) (falling back to the still sprite), decodes the GIF frames, keeps as many evenly spaced frames as fit the drawing's size limit (up to 12), and caches the pixels in the mod's store on your machine.
 
 ## Development
 
