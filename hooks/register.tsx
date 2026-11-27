@@ -50,7 +50,11 @@ export const register: Register = on => {
   })
 
   on('session.start', async ($, e, next) => {
-    await $.command.register({ name: 'pocket', description: 'Pick the pet by national dex number, or a form from 10001 on', argumentHint: '<number>' })
+    await $.command.register({
+      name: 'pocket',
+      description: 'Pick the pet by national dex number (1-1025, or a form from 10001 on); add shiny for its shiny colors',
+      argumentHint: '<number 1-1025> [shiny]',
+    })
     resume = await $.store.get('pet-state')
     const id = Number((await $.store.get('id')) ?? 25)
     const shiny = (await $.store.get('shiny')) === true
