@@ -2,6 +2,15 @@
 
 A Claude Code desktop mod: a pixel Pokémon lives over the chat in the Code tab. It walks on the top edge of the prompt box, jumps up onto message bubbles, code blocks and cards in the conversation, walks off their edges to drop back down, rests, and plays the sprite's own idle animation while standing. As the conversation scrolls, the ledges move with it, and the pet falls when one leaves from under it.
 
+## Requirements
+
+The Claude desktop app, with its Code tab running Claude Code 2.1.331 or later. Older versions do not give a mod the cell beside the prompt that the pet floats from, so no pet is drawn.
+
+The Code tab runs its own copy of Claude Code, which can differ from the `claude` command in your terminal, so `claude --version` does not tell you which version the app runs.
+
+- To check it, type `/status` in a Code tab session and read the `Claude Code` row.
+- To update it, choose Claude > Check for Updates… in the app's menu bar, then start a new session.
+
 ## Install
 
 In a Claude Code prompt:
