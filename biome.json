@@ -1,0 +1,18 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.9/schema.json",
+  "files": {
+    "includes": ["hooks/**"]
+  },
+  "formatter": {
+    "enabled": false
+  },
+  "assist": {
+    "enabled": false
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true
+    }
+  }
+}

@@ -212,7 +212,7 @@ function onGround(pet: Pet, world: World, size: Size, dt: number, rand: () => nu
   if (under === undefined) {
     return { ...pet, mode: 'air', vy: 0, on: undefined }
   }
-  let next: Pet = { ...pet, y: under.y0, on: { x0: under.x0, x1: under.x1 } }
+  const next: Pet = { ...pet, y: under.y0, on: { x0: under.x0, x1: under.x1 } }
   // Carried up into the ceiling: drop through the surface to whatever is below.
   if (under.y0 - size.h < 0 && under.y1 !== Infinity) {
     return { ...next, y: under.y0 + 0.05, mode: 'air', vy: 0, goal: { x: next.x, top: floorAt(world, next.x) } }

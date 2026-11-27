@@ -1,0 +1,17 @@
+repos:
+  - repo: https://github.com/biomejs/pre-commit
+    rev: v2.6.9
+    hooks:
+      - id: biome-lint
+        additional_dependencies: ["@biomejs/biome@2.6.9"]
+
+  - repo: local
+    hooks:
+      # Needs the mod types in .claude-plugin/types, which tsconfig.json extends.
+      - id: tsc
+        name: tsc --noEmit
+        language: node
+        entry: tsc --noEmit -p tsconfig.json
+        additional_dependencies: ["typescript@7.0.2"]
+        types_or: [ts, tsx]
+        pass_filenames: false

@@ -9,6 +9,8 @@ package = false
 
 [dependency-groups]
 test = ["pytest"]
+# pre-commit 4.7 needs 3.11: on older Pythons only the tests install.
+dev = [{ include-group = "test" }, "pre-commit>=4.7.0; python_version >= '3.11'"]
 
 [tool.pytest.ini_options]
 pythonpath = ["hooks"]
