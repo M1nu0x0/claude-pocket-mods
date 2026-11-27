@@ -399,5 +399,19 @@ test('a state kept before throws existed resumes not thrown', async () => {
 test('the command takes any positive whole number, leaving which have a sprite to the download', async () => {
   const parsed = ['25', ' 1025 ', '10001', '0', '-3', 'pikachu', '2.5', '1e400', ''].map(parseArg)
 
-  expect(parsed).toEqual([25, 1025, 10001, undefined, undefined, undefined, undefined, undefined, undefined])
+  expect(parsed.map(p => p?.id)).toEqual([25, 1025, 10001, undefined, undefined, undefined, undefined, undefined, undefined])
+})
+
+test('only the word shiny after the number asks for the shiny sprite', async () => {
+  const parsed = ['25', '25 shiny', ' 10001   shiny ', 'shiny', 'shiny 25', '25 pikachu', '25 shiny 1'].map(parseArg)
+
+  expect(parsed).toEqual([
+    { id: 25, shiny: false },
+    { id: 25, shiny: true },
+    { id: 10001, shiny: true },
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+  ])
 })

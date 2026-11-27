@@ -225,3 +225,19 @@ def test_bounding_box_clamps_to_max_side() -> None:
 def test_encode_exits_on_an_empty_sprite() -> None:
     with pytest.raises(SystemExit, match="empty"):
         sprite.encode([[[None]]], 1, 1, 1)
+
+
+def test_shiny_never_falls_back_to_the_normal_colors(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    urls: list[str] = []
+    monkeypatch.setattr(sprite, "download", urls.append)
+
+    with pytest.raises(SystemExit, match="no shiny sprite for #25"):
+        sprite.main(25, shiny=True)
+
+    assert [url.removeprefix(sprite.BASE) for url in urls] == [
+        "/versions/generation-v/black-white/animated/shiny/25.gif",
+        "/versions/generation-v/black-white/shiny/25.png",
+        "/shiny/25.png",
+    ]

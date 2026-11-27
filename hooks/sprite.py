@@ -358,19 +358,21 @@ def encode(frames: list[Frame], w: int, h: int, loop: float) -> dict[str, object
     }
 
 
-def main(pid: int) -> dict[str, object]:
-    gif = download(f"{BASE}/versions/generation-v/black-white/animated/{pid}.gif")
+def main(pid: int, shiny: bool = False) -> dict[str, object]:
+    folder = "shiny/" if shiny else ""
+    black_white = f"{BASE}/versions/generation-v/black-white"
+    gif = download(f"{black_white}/animated/{folder}{pid}.gif")
     if gif:
         w, h, frames, loop = decode_gif(gif)
         return encode(frames, w, h, loop)
-    png = download(f"{BASE}/versions/generation-v/black-white/{pid}.png") or download(
-        f"{BASE}/{pid}.png"
+    png = download(f"{black_white}/{folder}{pid}.png") or download(
+        f"{BASE}/{folder}{pid}.png"
     )
     if not png:
-        sys.exit(f"no sprite for #{pid}")
+        sys.exit(f"no {'shiny ' if shiny else ''}sprite for #{pid}")
     w, h, pixels = decode_png(png)
     return encode([pixels], w, h, 1)
 
 
 if __name__ == "__main__":
-    print(json.dumps(main(int(sys.argv[1]))))
+    print(json.dumps(main(int(sys.argv[1]), sys.argv[2:] == ["shiny"])))
