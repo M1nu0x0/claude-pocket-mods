@@ -1,0 +1,33 @@
+# Not a package: the mod's Python is hooks/sprite.py, run by /usr/bin/python3 on 3.9 or later.
+[project]
+name = "claude-pocket-mods"
+version = "0"
+requires-python = ">=3.9"
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+test = ["pytest"]
+
+[tool.pytest.ini_options]
+pythonpath = ["hooks"]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py39"
+
+[tool.pyright]
+include = ["hooks", "tests"]
+extraPaths = ["hooks"]
+pythonVersion = "3.9"
+typeCheckingMode = "strict"
+
+[tool.pyrefly]
+project-includes = ["hooks", "tests"]
+search-path = ["hooks"]
+python-version = "3.9"
+preset = "strict"
+
+[tool.pyrefly.errors]
+unnecessary-type-conversion = "error"
