@@ -32,7 +32,7 @@ In Claude Desktop, open `+` beside the prompt → Plugins → Add marketplace, e
 - `/pocket 25` picks a Pokémon by national dex number (1–1025), or one of PokéAPI's form numbers from 10001 on (megas, regional forms and the like). A number with no sprite says so.
 - `/pocket 25 shiny` picks its shiny colors. A number with no shiny sprite says so, and the pet stays as it was.
 
-The pet floats from a zero-width cell beside the prompt, so it draws over the conversation within the room the app gives floats above the prompt. A press on the pet picks it up; drag it and let go to drop it onto whatever is below.
+The pet floats from a zero-width cell beside the prompt, so it draws over the conversation within the room the app gives floats above the prompt. A press on the pet picks it up; drag it and let go to drop it onto whatever is below. When a resize leaves the pet where it does not fit, such as a gap narrower than itself, it moves to the nearest place it does.
 
 Only the Claude Code desktop app is supported. The terminal, mobile and VS Code are not: `/pocket` is left out of the command menu in sessions the desktop app is not attached to, and nothing is drawn anywhere but the desktop app.
 

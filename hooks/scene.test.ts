@@ -331,13 +331,12 @@ test('beside the band the pet goes down to the bottom of the prompt box, not han
   expect(Math.abs(after.x - 90)).toBeLessThan(0.1)
 })
 
-test('a pet the edge of the reach closes over after a resize drops again where it is free', async () => {
+test('a pet the edge of the reach closes over after a resize moves to where it is free', async () => {
   const shrunk = world({ x: 0, y: 0, columns: 60, rows: 35, kind: 'interface' })
 
-  const after = step(standing(world(), 30, 35), shrunk, size, 0.066, () => 0.5)
+  const after = run(standing(world(), 30, 35), shrunk, 1)
 
-  expect(after.x).toBeGreaterThanOrEqual(60)
-  expect(after.mode).toBe('air')
+  expect({ x: after.x, y: after.y }).toEqual({ x: 65, y: 35 })
 })
 
 test('a pet kept from the anchor stays put on screen as the region resizes around it', async () => {
@@ -365,10 +364,37 @@ test('a pet left past the region side after it shrank is brought back inside', a
 test('a pet buried by the reach moves to the nearest free column, not back to the middle', async () => {
   const shrunk = world({ x: 0, y: 0, columns: 20, rows: 35, kind: 'interface' })
 
-  const after = step(standing(world(), 15, 35), shrunk, size, 0.066, () => 0.5)
+  const after = run(standing(world(), 15, 35), shrunk, 1)
 
-  expect(after.x).toBeLessThan(30)
-  expect(after.y).toBeGreaterThan(30)
+  expect({ x: after.x, y: after.y }).toEqual({ x: 25, y: 35 })
+})
+
+const stack: Shape = { x: 0, y: 15, columns: 60, rows: 25, kind: 'interface' }
+const paneEdge = (x: number): Shape => ({ x, y: 0, columns: 100 - x, rows: 35, kind: 'interface' })
+
+test('a pet wedged in a gap narrower than itself moves to the nearest free top', async () => {
+  const narrowed = world(stack, paneEdge(66))
+
+  const after = run(standing(narrowed, 63, 35), narrowed, 1)
+
+  expect({ x: after.x, y: after.y }).toEqual({ x: 55, y: 15 })
+})
+
+test('a pet in a gap it fits in stays there', async () => {
+  const roomy = world(stack, paneEdge(72))
+
+  const after = run(standing(roomy, 66, 35), roomy, 1)
+
+  expect({ x: after.x, y: after.y }).toEqual({ x: 66, y: 35 })
+})
+
+test('an overlap gone within a few ticks does not move the pet', async () => {
+  const narrowed = world(stack, paneEdge(66))
+  const roomy = world(stack, paneEdge(72))
+
+  const after = run(run(standing(roomy, 66, 35), narrowed, 0.15), roomy, 1)
+
+  expect({ x: after.x, y: after.y }).toEqual({ x: 66, y: 35 })
 })
 
 test('a pet kept while held is resumed falling', async () => {
