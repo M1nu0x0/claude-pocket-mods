@@ -2,6 +2,22 @@
 
 A Claude Code desktop mod: a pixel Pokémon lives over the chat in the Code tab. It walks on the top edge of the prompt box, jumps up onto message bubbles, code blocks and cards in the conversation, walks off their edges to drop back down, rests, and plays the sprite's own idle animation while standing. As the conversation scrolls, the ledges move with it, and the pet falls when one leaves from under it.
 
+## Install
+
+In a Claude Code prompt:
+
+```
+/plugin install pocketmods --marketplace M1nu0x0/claude-pocket-mods
+```
+
+Answer `y` to `Add marketplace?` and pick the user scope. From a shell:
+
+```sh
+claude plugin install pocketmods --marketplace M1nu0x0/claude-pocket-mods
+```
+
+In Claude Desktop, open `+` beside the prompt → Plugins → Add marketplace, enter `M1nu0x0/claude-pocket-mods`, and add `pocketmods`.
+
 ## Use
 
 - `/pocket 25` picks a Pokémon by national dex number (1–1025), or one of PokéAPI's form numbers from 10001 on (megas, regional forms and the like). A number with no sprite says so.
